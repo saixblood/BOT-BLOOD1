@@ -12,9 +12,9 @@ module.exports.config = {
   cooldowns: 0
 };
 
-const SPAM_LIMIT = 5;
+const SPAM_LIMIT = 3;
 const SPAM_WINDOW = 10000;
-const BAN_DURATION = 10 * 60 * 1000;
+const BAN_DURATION = null;
 const REPLY_DELAY = 5000;
 
 const userMessages = new Map();
@@ -36,17 +36,12 @@ function saveBlocked(data) {
 function isBlocked(senderID) {
   const blocked = loadBlocked();
   if (!blocked[senderID]) return false;
-  if (Date.now() > blocked[senderID]) {
-    delete blocked[senderID];
-    saveBlocked(blocked);
-    return false;
-  }
   return true;
 }
 
 function blockUser(senderID) {
   const blocked = loadBlocked();
-  blocked[senderID] = Date.now() + BAN_DURATION;
+  blocked[senderID] = "permanent";
   saveBlocked(blocked);
 }
 
@@ -104,14 +99,9 @@ module.exports.handleEvent = async function({ event, api }) {
   times.push(now);
   userMessages.set(key, times);
 
-  if (times.length === SPAM_LIMIT) {
-    try { await api.unsendMessage(messageID); } catch(e) {}
-    return api.sendMessage(`⚠️ تحذير! أنت تستخدم الأوامر بشكل مفرط.\nإذا استمريت سيتم حظرك لمدة 10 دقائق!`, threadID, senderID);
-  }
-
-  if (times.length > SPAM_LIMIT) {
+  if (times.length >= SPAM_LIMIT) {
     blockUser(senderID);
     try { await api.unsendMessage(messageID); } catch(e) {}
-    return api.sendMessage(`🚫 تم حظرك من استخدام البوت لمدة 10 دقائق بسبب السبام!`, threadID, senderID);
+    return api.sendMessage(`🚫 تم حظرك نهائياً من استخدام البوت بسبب السبام!`, threadID, senderID);
   }
 };
