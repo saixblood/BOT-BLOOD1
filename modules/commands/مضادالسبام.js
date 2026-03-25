@@ -48,7 +48,7 @@ function blockUser(senderID) {
 function isPrivileged(senderID) {
   try {
     const config = JSON.parse(fs.readFileSync(path.join(global.client.mainPath, "config.json"), "utf-8"));
-    return (config.SUPERADMIN || []).includes(senderID) || (config.ADMINBOT || []).includes(senderID);
+    return (config.SUPERADMIN || []).includes(senderID);
   } catch(e) { return false; }
 }
 
