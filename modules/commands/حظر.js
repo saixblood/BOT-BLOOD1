@@ -16,17 +16,17 @@ function getBlockedPath() {
   return path.join(__dirname, "cache", "spam_blocked.json");
 }
 
-function isPrivileged(senderID) {
+function isSuperDev(senderID) {
   try {
     const config = JSON.parse(fs.readFileSync(path.join(global.client.mainPath, "config.json"), "utf-8"));
-    return (config.SUPERADMIN || []).includes(senderID) || (config.ADMINBOT || []).includes(senderID);
+    return (config.SUPERADMIN || []).includes(senderID);
   } catch(e) { return false; }
 }
 
 module.exports.run = async function({ event, api, args }) {
   const { threadID, messageID, senderID, type, messageReply } = event;
 
-  if (!isPrivileged(senderID)) return api.sendMessage("عذراً، هذا الأمر مخصص للمطورين فقط ❌", threadID, messageID);
+  if (!isSuperDev(senderID)) return api.sendMessage("عذراً، هذا الأمر مخصص للمطورين الرئيسيين فقط ❌", threadID, messageID);
 
   if (type !== "message_reply" || !messageReply) {
     return api.sendMessage("يرجى الرد على رسالة الشخص المراد حظره ⚠️", threadID, messageID);
@@ -34,7 +34,7 @@ module.exports.run = async function({ event, api, args }) {
 
   const targetID = messageReply.senderID;
 
-  if (isPrivileged(targetID)) return api.sendMessage("لا يمكن حظر مطور أو أدمن بوت ❌", threadID, messageID);
+  if (isSuperDev(targetID)) return api.sendMessage("لا يمكن حظر مطور رئيسي ❌", threadID, messageID);
 
   const p = getBlockedPath();
   if (!fs.existsSync(p)) fs.writeJsonSync(p, {});
